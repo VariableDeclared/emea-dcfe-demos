@@ -1,0 +1,17 @@
+bundle: kubernetes
+applications:
+  scrape-interval-config:
+    charm:  prometheus-scrape-config-k8s
+    channel: latest/edge
+    scale: 1
+    trust: true
+    options:
+      scrape_timeout: 30s
+      scrape_interval: 5m
+    offers:
+      scrape-interval-config:
+        endpoints:
+          - configurable-scrape-jobs
+relations:
+  - [ scrape-interval-config:metrics-endpoint, prometheus:metrics-endpoint]
+
