@@ -1,0 +1,32 @@
+machines:
+  '0':
+    constraints: "instance-type=m1.medium allocate-public-ip=true"
+      #  '1':
+      #    constraints: "instance-type=m1.small allocate-public-ip=true"
+
+applications:
+  microk8s:
+    bindings:
+      ? ''
+      : alpha
+      #control-plane: alpha
+      #workers: alpha
+    channel: legacy/stable
+    charm: microk8s
+    expose: true
+    num_units: 1
+    constraints: "cores=16 mem=32G root-disk=1000G"
+    options:
+      addons: "dns ingress rbac"  #https://github.com/canonical/microk8s/issues/3086
+      skip_verify: "true"
+      channel: latest/stable
+    series: jammy
+    to:
+    - '0'
+      # jumphost:
+      #   num_units: 1
+      #   charm: ubuntu
+      #   to:
+      #   - '1'
+relations: []
+series: jammy

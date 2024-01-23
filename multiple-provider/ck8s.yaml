@@ -1,0 +1,166 @@
+default-base: ubuntu@22.04/stable
+applications:
+  calico:
+    charm: calico
+    channel: stable
+    revision: 101
+    resources:
+      calico: 99
+      calico-arm64: 99
+    options:
+      veth-mtu: 1200
+      vxlan: Always
+    annotations:
+      gui-x: "475"
+      gui-y: "605"
+  cinder-csi:
+    charm: cinder-csi
+    channel: stable
+    revision: 5
+  containerd:
+    charm: containerd
+    channel: stable
+    revision: 73
+    resources:
+      containerd: 2
+    annotations:
+      gui-x: "475"
+      gui-y: "800"
+  easyrsa:
+    charm: easyrsa
+    channel: stable
+    revision: 48
+    resources:
+      easyrsa: 2
+    num_units: 1
+    to:
+    - "0"
+    annotations:
+      gui-x: "90"
+      gui-y: "420"
+    constraints: arch=amd64
+  etcd:
+    charm: etcd
+    channel: stable
+    revision: 748
+    resources:
+      core: 0
+      etcd: 3
+      snapshot: 0
+    num_units: 1
+    to:
+    - "0"
+    options:
+      channel: 3.4/stable
+    annotations:
+      gui-x: "800"
+      gui-y: "420"
+    constraints: arch=amd64
+    storage:
+      data: loop,1024M
+  kubernetes-control-plane:
+    charm: kubernetes-control-plane
+    channel: stable
+    revision: 321
+    resources:
+      cdk-addons: 4
+      cni-amd64: 315
+      cni-arm64: 315
+      cni-s390x: 314
+      core: 4
+      kube-apiserver: 4
+      kube-controller-manager: 4
+      kube-proxy: 4
+      kube-scheduler: 4
+      kubectl: 4
+    num_units: 1
+    to:
+    - "0"
+    options:
+      channel: 1.28/stable
+    annotations:
+      gui-x: "800"
+      gui-y: "850"
+    constraints: arch=amd64
+  kubernetes-worker:
+    charm: kubernetes-worker
+    channel: stable
+    revision: 134
+    resources:
+      cni-amd64: 134
+      cni-arm64: 134
+      cni-s390x: 134
+      core: 1
+      kube-proxy: 1
+      kubectl: 1
+      kubelet: 1
+    num_units: 2
+    to:
+    - "1"
+    - "2"
+    expose: true
+    options:
+      channel: 1.28/stable
+    annotations:
+      gui-x: "90"
+      gui-y: "850"
+    constraints: arch=amd64
+  openstack-cloud-controller:
+    charm: openstack-cloud-controller
+    channel: stable
+    revision: 8
+  openstack-integrator:
+    charm: openstack-integrator
+    channel: stable
+    revision: 69
+    resources:
+      openstackclients: 1
+    num_units: 1
+    to:
+    - "3"
+    constraints: arch=amd64
+    trust: true
+machines:
+  "0":
+    constraints: arch=amd64 cpu-cores=2 mem=4096 root-disk=4096
+  "1":
+    constraints: arch=amd64 cpu-cores=2 mem=4096 root-disk=4096
+  "2":
+    constraints: arch=amd64 cpu-cores=2 mem=4096 root-disk=4096
+  "3":
+    constraints: arch=amd64
+relations:
+- - kubernetes-control-plane:kube-control
+  - kubernetes-worker:kube-control
+- - kubernetes-control-plane:certificates
+  - easyrsa:client
+- - etcd:certificates
+  - easyrsa:client
+- - kubernetes-control-plane:etcd
+  - etcd:db
+- - kubernetes-worker:certificates
+  - easyrsa:client
+- - calico:etcd
+  - etcd:db
+- - calico:cni
+  - kubernetes-control-plane:cni
+- - calico:cni
+  - kubernetes-worker:cni
+- - containerd:containerd
+  - kubernetes-worker:container-runtime
+- - containerd:containerd
+  - kubernetes-control-plane:container-runtime
+- - openstack-cloud-controller:certificates
+  - easyrsa:client
+- - openstack-cloud-controller:kube-control
+  - kubernetes-control-plane:kube-control
+- - openstack-cloud-controller:openstack
+  - openstack-integrator:clients
+- - openstack-cloud-controller:external-cloud-provider
+  - kubernetes-control-plane:external-cloud-provider
+- - cinder-csi:certificates
+  - easyrsa:client
+- - cinder-csi:kube-control
+  - kubernetes-control-plane:kube-control
+- - cinder-csi:openstack
+  - openstack-integrator:clients

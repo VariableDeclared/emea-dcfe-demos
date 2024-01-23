@@ -1,0 +1,60 @@
+podSecurityContext:                   
+  runAsUser: 0  
+
+image:
+  tag: v1.28.0    # eg v1.26.3
+
+
+enabledControllers:
+  - cloud-node
+  - cloud-node-lifecycle
+  - service
+
+
+nodeSelector:
+  node.kubernetes.io/microk8s-controlplane: "microk8s-controlplane"
+
+
+cloudConfig:
+  global:
+    auth-url: https://keystone.orange.box:5000/v3
+    ca-file: /etc/ssl/certs/openstack-ca.crt   # ca file path inside microk8s
+    username: admin
+    password: admin
+    region: RegionOne
+    domain-name: admin_domain
+    tenant-name: k8s-cos-0
+    user-domain-name: admin_domain
+  networking:
+    public-network-name: f7c9cf2b-bda9-46bc-8346-aa64e42a7661
+    internal-network-name: b11f7b1c-29e9-4ca9-b816-3c366f0b8f80
+  loadBalancer:
+    enabled: true
+    lb-method: ROUND_ROBIN  # need Captical 
+    lb-provider: amphora
+    subnet-id: baecc786-6e7f-400c-8d76-c37e0541fa1a
+    member-subnet-id: baecc786-6e7f-400c-8d76-c37e0541fa1a
+    floating-subnet: ext-subnet
+    monitor-max-retries-down: 10
+    floating-network-id: f7c9cf2b-bda9-46bc-8346-aa64e42a7661
+
+    create-monitor: true 
+
+
+extraVolumes:
+  - name: ssl-certs
+    hostPath:
+      path: /etc/openstack/certs
+
+
+extraVolumeMounts:
+  - name: ssl-certs
+    mountPath: /etc/ssl/certs
+    readOnly: true
+
+
+cluster:
+  name: microk8s 
+
+    #Create a Kubernetes Service with Load Balancer Type
+

@@ -1,0 +1,215 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cloud-controller-manager
+  namespace: openstack-ccm
+---
+# Source: openstack-cloud-controller-manager/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloud-config
+  namespace: openstack-ccm
+  annotations:
+type: Opaque
+data:
+  cloud.conf: W0dsb2JhbF0KYXV0aC11cmwgPSAiaHR0cHM6Ly9rZXlzdG9uZS5vcmFuZ2UuYm94OjUwMDAvdjMiCmNhLWZpbGUgPSAiL2V0Yy9zc2wvY2VydHMvb3BlbnN0YWNrLWNhLmNydCIKZG9tYWluLW5hbWUgPSAic2VydmljZS1wcm92aWRlciIKcGFzc3dvcmQgPSAiazhzLXRlbmFudC11c3IiCnJlZ2lvbiA9ICJSZWdpb25PbmUiCnRlbmFudC1uYW1lID0gImNvcy1jdXN0b21lci0wIgp1c2VyLWRvbWFpbi1uYW1lID0gInNlcnZpY2UtcHJvdmlkZXIiCnVzZXJuYW1lID0gIms4cy10ZW5hbnQtdXNyIgoKW05ldHdvcmtpbmddCmludGVybmFsLW5ldHdvcmstbmFtZSA9ICJjb3MtbmV0LTAiCnB1YmxpYy1uZXR3b3JrLW5hbWUgPSAiZXh0LW5ldCIKCltMb2FkQmFsYW5jZXJdCmNyZWF0ZS1tb25pdG9yID0gInRydWUiCmVuYWJsZWQgPSAidHJ1ZSIKZmxvYXRpbmctbmV0d29yay1pZCA9ICJjYmY5YjMyYi1iOWI0LTQ4YWUtYjM4ZC1mNWNmMjJjNjdiZjAiCmZsb2F0aW5nLXN1Ym5ldCA9ICJleHQtc3VibmV0IgpsYi1tZXRob2QgPSAiUk9VTkRfUk9CSU4iCmxiLXByb3ZpZGVyID0gImFtcGhvcmEiCm1lbWJlci1zdWJuZXQtaWQgPSAiNmEyNjFiOWUtN2UyYS00NThkLWIzMGItMzE2ZjExM2YzNGNmIgptb25pdG9yLW1heC1yZXRyaWVzLWRvd24gPSAiMTAiCnN1Ym5ldC1pZCA9ICI2YTI2MWI5ZS03ZTJhLTQ1OGQtYjMwYi0zMTZmMTEzZjM0Y2YiCgpbQmxvY2tTdG9yYWdlXQoKW01ldGFkYXRhXQo=
+    
+---
+# Source: openstack-cloud-controller-manager/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:cloud-controller-manager
+  annotations:
+rules:
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - create
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - nodes/status
+  verbs:
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services/status
+  verbs:
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts/token
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - create
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumes
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - list
+  - get
+  - watch
+---
+# Source: openstack-cloud-controller-manager/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:cloud-controller-manager
+  annotations:
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:cloud-controller-manager
+subjects:
+- kind: ServiceAccount
+  name: cloud-controller-manager
+  namespace: "openstack-ccm"
+---
+# Source: openstack-cloud-controller-manager/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:cloud-controller-manager-ks
+  annotations:
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:cloud-controller-manager
+subjects:
+- kind: ServiceAccount
+  name: cloud-controller-manager
+  namespace: "kube-system"
+---
+# Source: openstack-cloud-controller-manager/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: openstack-cloud-controller-manager
+  namespace: openstack-ccm
+  labels:
+    app.kubernetes.io/name: openstack-cloud-controller-manager
+    helm.sh/chart: openstack-cloud-controller-manager-2.28.3
+    app.kubernetes.io/instance: openstack-ccm
+    app.kubernetes.io/version: "v1.28.1"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+spec:
+  selector:
+    matchLabels:
+      component: controllermanager
+      app: openstack-cloud-controller-manager
+      release: openstack-ccm
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: 0ca719f17af4ba408a6870ca2ddb97bfc85a49cda7d2637698c575f90d59e0c5
+      labels:
+        component: controllermanager
+        app: openstack-cloud-controller-manager
+        release: openstack-ccm
+        chart: openstack-cloud-controller-manager-2.28.3
+        heritage: Helm
+    spec:
+      nodeSelector:
+        node.kubernetes.io/microk8s-controlplane: microk8s-controlplane
+      securityContext:
+        runAsUser: 0
+      serviceAccountName: cloud-controller-manager
+      containers:
+        - name: openstack-cloud-controller-manager
+          image: "registry.k8s.io/provider-os/openstack-cloud-controller-manager:v1.28.0"
+          args:
+            - /bin/openstack-cloud-controller-manager
+            - --v=2
+            - --cloud-config=$(CLOUD_CONFIG)
+            - --cluster-name=$(CLUSTER_NAME)
+            - --cloud-provider=openstack
+            - --use-service-account-credentials=true
+            - --controllers=cloud-node,cloud-node-lifecycle,service
+            - --bind-address=127.0.0.1
+          volumeMounts:
+            - mountPath: /etc/config
+              name: cloud-config-volume
+              readOnly: true
+            - mountPath: /etc/ssl/certs
+              name: ssl-certs
+              readOnly: true
+          env:
+            - name: CLOUD_CONFIG
+              value: /etc/config/cloud.conf
+            - name: CLUSTER_NAME
+              value: microk8s
+      hostNetwork: true
+      volumes:
+      - name: cloud-config-volume
+        secret:
+          secretName: cloud-config
+        
+      - hostPath:
+          path: /etc/openstack/certs
+        name: ssl-certs
