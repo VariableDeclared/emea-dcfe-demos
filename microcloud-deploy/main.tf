@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     lxd = {
-      source = "terraform-lxd/lxd"
+      source  = "terraform-lxd/lxd"
       version = "2.0.0"
     }
   }
@@ -10,13 +10,13 @@ terraform {
 provider "lxd" {
 }
 
-locals { 
-    cloud_init=<<EOT
+locals {
+  cloud_init = <<EOT
 #cloud-config
 users:
   - name: ubuntu
     ssh_authorized_keys:
-    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCi+i7GkSHaudlD/k2kUcKIB4rm0HPtGY0z/+qA5Rr15Jec9S9fLGOwGjMxFICoiu6j+zbAEsC6BnzSyrFVTO1+M4tNh7X/fey/Cju72G5/smgAvXsNIE9Vj/0MoPJ7lYJn8o4SP3kyIWuj2i2KKAn7PrWugLibinEWgrqB3m9hT2UsEJA0t7com5WefwC2voRw32wGTcNBJWkY+0i3Oj/JttH7hulSixTdZ24HyOk/EMqYEA6VX6KszrBEe3TfhUWtZs2TkPIXTCD/080xvQy1923AsIKzI8aY5FwdjTKur++OhmHh0CoKQnSjdp2yuZ32iEd8AA/FK5nNN4ebTg49pWiV1Y69VorbWme+hBPj3XSsReTkUAh2kmn+IU/SEl0VFdh1914MJdWnZuiADuA6nE+UrQwL45QTO0yVlDxqwS6OnpVzhUlhpUzasFiG3X5LA9I/nzkfod+dBnmfEOeGw8wC7IBu1CSCz3vTOfzu0phqtzvwWpjRl8xQgHymhPU= ubuntu@microcloudp01
+    - ${var.ssh_pubkey}
     sudo: ALL=(ALL) NOPASSWD:ALL
 write_files:
   - content: |
@@ -30,26 +30,40 @@ write_files:
         #   `ovn_uplink_interface` is optional and represents the name of the interface reserved for use with OVN.
         #   `storage` is optional and represents explicit paths to disks for each system.
         systems:
-        - name: micro01
+        - name: microcloud01
         ovn_uplink_interface: ${var.bridge_nic}
-        - name: micro02
-        ovn_uplink_interface: ${var.bridge_nic}
-        storage:
-            local:
-            path: /dev/sda
-            wipe: true
-            ceph:
-            - path: /dev/sdb
+        - name: microcloud02
+          ovn_uplink_interface: ${var.bridge_nic}
+          storage:
+              local:
+                path: /dev/sda
                 wipe: true
-        - name: micro03
-        ovn_uplink_interface: ${var.bridge_nic}
+              ceph:
+              - path: /dev/sdb
+                wipe: true
+        - name: microcloud03
+          ovn_uplink_interface: ${var.bridge_nic}
+          storage:
+              local:
+                path: /dev/sda
+                wipe: true
+              ceph:
+              - path: /dev/sdb
+                wipe: true
         - name: micro04
-        ovn_uplink_interface: ${var.bridge_nic}
+          ovn_uplink_interface: ${var.bridge_nic}
+          storage:
+              local:
+                path: /dev/sda
+                wipe: true
+              ceph:
+              - path: /dev/sdb
+                wipe: true
 
         # `ceph` is optional and represents the Ceph global configuration
         ceph:
-        internal_network: 10.0.1.0/24
-        public_network: 10.0.2.0/24
+        internal_network: ${var.bridge_nic_cidr}
+        public_network: ${var.bridge_nic_cidr}
 
         # `ovn` is optional and represents the OVN & uplink network configuration for LXD.
         ovn:
@@ -83,7 +97,7 @@ write_files:
 # TODO: Re-add hardening
 snap:
   commands:
-    00: snap install lxd --channel=5.21/stable --cohort="+"
+    00: snap refresh lxd --channel=5.21/stable --cohort="+"
     01: snap install microceph --channel=quincy/stable --cohort="+"
     02: snap install microovn --channel=22.03/stable --cohort="+"
     03: snap install microcloud --channel=latest/stable --cohort="+"
@@ -99,36 +113,44 @@ resource "lxd_project" "microcloud" {
   }
 }
 resource "lxd_instance" "microcloud_nodes" {
-  count = 3
-  name  = "microcloud-${count.index}"
-  image = "ubuntu:jammy"
-  type  = "virtual-machine"
-  project = lxd_project.microcloud.name
+  count            = 3
+  name             = "microcloud-${count.index}"
+  image            = "ubuntu:jammy"
+  type             = "virtual-machine"
+  project          = lxd_project.microcloud.name
   wait_for_network = false
   config = {
-    "boot.autostart" = true
+    "boot.autostart"       = true
     "cloud-init.user-data" = local.cloud_init
   }
-  
+
   limits = {
-    cpu = 4
+    cpu    = 4
     memory = "8GiB"
   }
   device {
     name = "root"
     type = "disk"
     properties = {
-        pool = "default"
-        path = "/"
-        size = "200GiB"
+      pool = "default"
+      path = "/"
+      size = "200GiB"
+    }
+  }
+  device {
+    name = "sdb"
+    type = "disk"
+    properties = {
+      pool = "default"
+      size = "100GiB"
     }
   }
   device {
     name = "eth0"
     type = "nic"
     properties = {
-        nictype = "bridged"
-        parent = "br0"
+      nictype = "bridged"
+      parent  = "br0"
     }
   }
 }

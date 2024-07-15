@@ -22,3 +22,9 @@ variable "ovn_range_end" {
     type = string
     default = "10.10.32.200"
 }
+variable "ssh_pubkey" {
+    type = string
+}
+variable "bridge_nic_cidr" {
+    type = string
+}
