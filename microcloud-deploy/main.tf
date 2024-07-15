@@ -4,12 +4,18 @@ terraform {
       source  = "terraform-lxd/lxd"
       version = "2.0.0"
     }
+    ssh = {
+      source = "loafoe/ssh"
+      version = "2.7.0"
+    }
   }
 }
 
 provider "lxd" {
 }
-
+provider ssh {
+  # Configuration options
+}
 locals {
   cloud_init = <<EOT
 #cloud-config
@@ -18,82 +24,6 @@ users:
     ssh_authorized_keys:
     - ${var.ssh_pubkey}
     sudo: ALL=(ALL) NOPASSWD:ALL
-write_files:
-  - content: |
-        # `lookup_subnet` limits the subnet when looking up systems with mDNS.
-        lookup_subnet: 10.0.0.1/24
-        # `lookup_interface` limits the interface when looking up systems with mDNS.
-        lookup_interface: eth0
-
-        # `systems` lists the systems we expect to find by their host name.
-        #   `name` represents the host name
-        #   `ovn_uplink_interface` is optional and represents the name of the interface reserved for use with OVN.
-        #   `storage` is optional and represents explicit paths to disks for each system.
-        systems:
-        - name: microcloud01
-        ovn_uplink_interface: ${var.bridge_nic}
-        - name: microcloud02
-          ovn_uplink_interface: ${var.bridge_nic}
-          storage:
-              local:
-                path: /dev/sda
-                wipe: true
-              ceph:
-              - path: /dev/sdb
-                wipe: true
-        - name: microcloud03
-          ovn_uplink_interface: ${var.bridge_nic}
-          storage:
-              local:
-                path: /dev/sda
-                wipe: true
-              ceph:
-              - path: /dev/sdb
-                wipe: true
-        - name: micro04
-          ovn_uplink_interface: ${var.bridge_nic}
-          storage:
-              local:
-                path: /dev/sda
-                wipe: true
-              ceph:
-              - path: /dev/sdb
-                wipe: true
-
-        # `ceph` is optional and represents the Ceph global configuration
-        ceph:
-        internal_network: ${var.bridge_nic_cidr}
-        public_network: ${var.bridge_nic_cidr}
-
-        # `ovn` is optional and represents the OVN & uplink network configuration for LXD.
-        ovn:
-        ipv4_gateway: ${var.ovn_gateway}
-        ipv4_range: ${var.ovn_range_start}-${var.ovn_range_end}
-        dns_servers: 8.8.8.8
-
-        # `storage` is optional and is used as basic filtering logic for finding disks across all systems.
-        # Filters are checked in order of appearance.
-        # The names and values of each key correspond to the YAML field names for the `api.ResouresStorageDisk`
-        # struct here:
-        # https://github.com/canonical/lxd/blob/c86603236167a43836c2766647e2fac97d79f899/shared/api/resource.go#L591
-        # Supported operands: &&, ||, <, >, <=, >=, ==, !=, !
-        # String values must not be in quotes unless the string contains a space.
-        # Single quotes are fine, but double quotes must be escaped.
-        # `find_min` and `find_max` can be used to validate the number of disks each filter finds.
-        # `cephfs: true` can be used to optionally set up a CephFS file system alongside Ceph distributed storage.
-        storage:
-        cephfs: true
-        ceph:
-            - find: size > 10GiB && size < 50GiB 
-            find_min: 1
-            find_max: 2
-            wipe: true
-            - find: size > 10GiB && size < 50GiB && type == hdd && partitioned == false && block_size == 512
-            find_min: 3
-            find_max: 8
-            wipe: false
-    path: /home/ubuntu/microcloud.yaml
-    owner: ubuntu:ubuntu
 # TODO: Re-add hardening
 snap:
   commands:
@@ -111,6 +41,14 @@ resource "lxd_project" "microcloud" {
     "features.images"          = true
     "features.profiles"        = true
   }
+}
+
+resource "lxd_volume" "mc_sdb_vols" {
+  count = 3
+  name = "microcloud-sdb-${count.index}"
+  content_type = "block"
+  pool = "default"
+  project = "microcloud"
 }
 resource "lxd_instance" "microcloud_nodes" {
   count            = 3
@@ -142,7 +80,7 @@ resource "lxd_instance" "microcloud_nodes" {
     type = "disk"
     properties = {
       pool = "default"
-      size = "100GiB"
+      source = lxd_volume.mc_sdb_vols[count.index].name
     }
   }
   device {
@@ -153,4 +91,21 @@ resource "lxd_instance" "microcloud_nodes" {
       parent  = "br0"
     }
   }
+}
+
+resource "ssh_resource" "microcloud_init" {
+  host         = lxd_instance.microcloud_nodes[0].ipv4_address
+  user         = "ubuntu"
+  agent        = true
+
+  when         = "create" # Default
+
+  file {
+    content     = templatefile("${path.module}/templates/mc-init.tmpl", { instances = lxd_instance.microcloud_nodes[*].ipv4_address, lookup_subnet = var.lookup_subnet, bridge_nic = var.bridge_nic, bridge_nic_cidr = var.lookup_subnet, ovn_gateway = var.ovn_gateway, ovn_range_start = var.ovn_range_start, ovn_range_end = var.ovn_range_end })
+    destination = "/home/ubuntu/init-mc.yaml"
+    permissions = "0600"
+  }
+    commands = [
+    "/home/ubuntu/init-mc.yaml | microcloud init --preseed",
+  ]
 }

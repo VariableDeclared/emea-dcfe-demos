@@ -8,7 +8,10 @@ variable "bridge_nic" {
     type = string
     default = "br0"
 }
-
+variable "lookup_subnet" {
+    type = string
+    default = "10.10.32.0/24"
+}
 
 variable "ovn_gateway" {
     type = string
