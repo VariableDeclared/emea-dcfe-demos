@@ -34,7 +34,7 @@ snap:
 EOT
 }
 resource "lxd_project" "microcloud" {
-  name        = "microcloud"
+  name        = "${var.lxd_project}"
   description = "Your Microcloud!"
   config = {
     "features.storage.volumes" = true
@@ -48,7 +48,7 @@ resource "lxd_volume" "mc_sdb_vols" {
   name = "microcloud-sdb-${count.index}"
   content_type = "block"
   pool = "default"
-  project = "microcloud"
+  project = "${var.lxd_project}"
 }
 resource "lxd_instance" "microcloud_nodes" {
   count            = 3
@@ -99,13 +99,13 @@ resource "ssh_resource" "microcloud_init" {
   agent        = true
 
   when         = "create" # Default
-
+  depends_on = [ lxd_instance.microcloud_nodes ]
   file {
     content     = templatefile("${path.module}/templates/mc-init.tmpl", { instances = [for i in lxd_instance.microcloud_nodes : i.ipv4_address], lookup_subnet = var.lookup_subnet, bridge_nic = var.bridge_nic, bridge_nic_cidr = var.lookup_subnet, ovn_gateway = var.ovn_gateway, ovn_range_start = var.ovn_range_start, ovn_range_end = var.ovn_range_end })
     destination = "/home/ubuntu/init-mc.yaml"
     permissions = "0600"
   }
     commands = [
-    "/home/ubuntu/init-mc.yaml | microcloud init --preseed",
+    "cat /home/ubuntu/init-mc.yaml | microcloud init --preseed",
   ]
 }

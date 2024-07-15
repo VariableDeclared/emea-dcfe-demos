@@ -3,7 +3,10 @@ variable "pro_token" {
     type = string
 }
 
-
+variable "lxd_project" {
+    type = string
+    default = "microcloud1"
+}
 variable "bridge_nic" {
     type = string
     default = "br0"
