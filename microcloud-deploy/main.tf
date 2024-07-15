@@ -101,7 +101,7 @@ resource "ssh_resource" "microcloud_init" {
   when         = "create" # Default
 
   file {
-    content     = templatefile("${path.module}/templates/mc-init.tmpl", { instances = lxd_instance.microcloud_nodes[*].ipv4_address, lookup_subnet = var.lookup_subnet, bridge_nic = var.bridge_nic, bridge_nic_cidr = var.lookup_subnet, ovn_gateway = var.ovn_gateway, ovn_range_start = var.ovn_range_start, ovn_range_end = var.ovn_range_end })
+    content     = templatefile("${path.module}/templates/mc-init.tmpl", { instances = [for i in lxd_instance.microcloud_nodes : i.ipv4_address], lookup_subnet = var.lookup_subnet, bridge_nic = var.bridge_nic, bridge_nic_cidr = var.lookup_subnet, ovn_gateway = var.ovn_gateway, ovn_range_start = var.ovn_range_start, ovn_range_end = var.ovn_range_end })
     destination = "/home/ubuntu/init-mc.yaml"
     permissions = "0600"
   }
