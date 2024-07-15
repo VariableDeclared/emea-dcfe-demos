@@ -3,12 +3,18 @@ variable "pro_token" {
     type = string
 }
 
-
+variable "lxd_project" {
+    type = string
+    default = "microcloud1"
+}
 variable "bridge_nic" {
     type = string
     default = "br0"
 }
-
+variable "lookup_subnet" {
+    type = string
+    default = "10.10.32.0/24"
+}
 
 variable "ovn_gateway" {
     type = string
@@ -21,4 +27,10 @@ variable "ovn_range_start" {
 variable "ovn_range_end" {
     type = string
     default = "10.10.32.200"
+}
+variable "ssh_pubkey" {
+    type = string
+}
+variable "bridge_nic_cidr" {
+    type = string
 }
