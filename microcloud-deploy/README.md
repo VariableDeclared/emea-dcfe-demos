@@ -8,7 +8,7 @@ sudo lxd init --auto
 
 ```
 sudo snap install --classic tofu
-tofu apply
+tofu init
 ```
 
 ## Apply the plan
