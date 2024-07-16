@@ -18,8 +18,8 @@ systems:
 %{ endfor ~}
 # `ceph` is optional and represents the Ceph global configuration
 ceph:
-internal_network: ${bridge_nic_cidr}
-public_network: ${bridge_nic_cidr}
+  internal_network: ${bridge_nic_cidr}
+  public_network: ${bridge_nic_cidr}
 
 # `ovn` is optional and represents the OVN & uplink network configuration for LXD.
 ovn:
