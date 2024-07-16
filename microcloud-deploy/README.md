@@ -19,8 +19,8 @@ tofu apply
 
 ## Init Microcloud
 
-For now microcloud initialisation needs to happen by hand. To do this follow the docs: https://canonical-microcloud.readthedocs-hosted.com/en/latest/how-to/initialise/
-
+The terraform will automatically trigger an initialisation, via the non-interactive method - more information can be found here: https://canonical-microcloud.readthedocs-hosted.com/en/latest/how-to/initialise/#non-interactive-configuration
 ## TODO:
 
-- Finish cloud auto-init
+- Additional networks
+- Microcloud VM bridging
