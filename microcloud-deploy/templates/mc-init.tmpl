@@ -1,5 +1,5 @@
 # `lookup_subnet` limits the subnet when looking up systems with mDNS.
-lookup_subnet ${lookup_subnet}
+lookup_subnet: ${lookup_subnet}
 # `lookup_interface` limits the interface when looking up systems with mDNS.
 lookup_interface: eth0
 
@@ -10,11 +10,11 @@ lookup_interface: eth0
 systems:
 %{ for mc_inst in instances ~}
 - name: ${mc_inst}
-    ovn_uplink_interface: ${bridge_nic}
-    storage:
-        ceph:
-        - path: /dev/sdb
-          wipe: true
+  ovn_uplink_interface: ${bridge_nic}
+  storage:
+      ceph:
+      - path: /dev/sdb
+        wipe: true
 %{ endfor ~}
 # `ceph` is optional and represents the Ceph global configuration
 ceph:
@@ -23,9 +23,9 @@ public_network: ${bridge_nic_cidr}
 
 # `ovn` is optional and represents the OVN & uplink network configuration for LXD.
 ovn:
-ipv4_gateway: ${ovn_gateway}
-ipv4_range: ${ovn_range_start}-${ovn_range_end}
-dns_servers: 8.8.8.8
+  ipv4_gateway: ${ovn_gateway}
+  ipv4_range: ${ovn_range_start}-${ovn_range_end}
+  dns_servers: 8.8.8.8
 
 # `storage` is optional and is used as basic filtering logic for finding disks across all systems.
 # Filters are checked in order of appearance.
@@ -37,14 +37,11 @@ dns_servers: 8.8.8.8
 # Single quotes are fine, but double quotes must be escaped.
 # `find_min` and `find_max` can be used to validate the number of disks each filter finds.
 # `cephfs: true` can be used to optionally set up a CephFS file system alongside Ceph distributed storage.
-storage:
-cephfs: true
-ceph:
-    - find: size > 10GiB && size < 50GiB 
-    find_min: 1
-    find_max: 2
-    wipe: true
-    - find: size > 10GiB && size < 50GiB && type == hdd && partitioned == false && block_size == 512
-    find_min: 3
-    find_max: 8
-    wipe: false
+#storage:
+#  cephfs: true
+#  ceph:
+#      - find: size > 10GiB && size < 50GiB 
+#        find_min: 1
+#        find_max: 2
+#        wipe: true
+#

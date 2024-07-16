@@ -24,13 +24,12 @@ users:
     ssh_authorized_keys:
     - ${var.ssh_pubkey}
     sudo: ALL=(ALL) NOPASSWD:ALL
-# TODO: Re-add hardening
 snap:
   commands:
-    00: snap refresh lxd --channel=5.21/stable --cohort="+"
-    01: snap install microceph --channel=quincy/stable --cohort="+"
-    02: snap install microovn --channel=22.03/stable --cohort="+"
-    03: snap install microcloud --channel=latest/stable --cohort="+"
+    1: [snap, refresh, lxd, --channel=5.21/stable, --cohort="+"]
+    2: [snap, install, microceph, --channel=quincy/stable, --cohort="+"]
+    3: [snap, install, microovn, --channel=22.03/stable, --cohort="+"]
+    4: [snap, install, microcloud, --channel=latest/stable, --cohort="+"]
 EOT
 }
 resource "lxd_project" "microcloud" {
@@ -38,8 +37,8 @@ resource "lxd_project" "microcloud" {
   description = "Your Microcloud!"
   config = {
     "features.storage.volumes" = true
-    "features.images"          = true
-    "features.profiles"        = true
+    "features.images"          = false
+    "features.profiles"        = false
   }
 }
 
@@ -56,7 +55,7 @@ resource "lxd_instance" "microcloud_nodes" {
   image            = "ubuntu:jammy"
   type             = "virtual-machine"
   project          = lxd_project.microcloud.name
-  wait_for_network = false
+  wait_for_network = true
   config = {
     "boot.autostart"       = true
     "cloud-init.user-data" = local.cloud_init
@@ -96,16 +95,16 @@ resource "lxd_instance" "microcloud_nodes" {
 resource "ssh_resource" "microcloud_init" {
   host         = lxd_instance.microcloud_nodes[0].ipv4_address
   user         = "ubuntu"
-  agent        = true
-
+  agent        = false
+  private_key  = file("~/.ssh/id_rsa")
   when         = "create" # Default
   depends_on = [ lxd_instance.microcloud_nodes ]
   file {
-    content     = templatefile("${path.module}/templates/mc-init.tmpl", { instances = [for i in lxd_instance.microcloud_nodes : i.ipv4_address], lookup_subnet = var.lookup_subnet, bridge_nic = var.bridge_nic, bridge_nic_cidr = var.lookup_subnet, ovn_gateway = var.ovn_gateway, ovn_range_start = var.ovn_range_start, ovn_range_end = var.ovn_range_end })
+    content     = templatefile("${path.module}/templates/mc-init.tmpl", { instances = [for i in lxd_instance.microcloud_nodes : i.name], lookup_subnet = var.lookup_subnet, bridge_nic = var.bridge_nic, bridge_nic_cidr = var.lookup_subnet, ovn_gateway = var.ovn_gateway, ovn_range_start = var.ovn_range_start, ovn_range_end = var.ovn_range_end })
     destination = "/home/ubuntu/init-mc.yaml"
     permissions = "0600"
   }
     commands = [
-    "cat /home/ubuntu/init-mc.yaml | microcloud init --preseed",
+    "cat /home/ubuntu/init-mc.yaml | sudo microcloud init --preseed",
   ]
 }

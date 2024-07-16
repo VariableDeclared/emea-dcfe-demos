@@ -5,11 +5,11 @@ variable "pro_token" {
 
 variable "lxd_project" {
     type = string
-    default = "microcloud1"
+    default = "microcloud2"
 }
 variable "bridge_nic" {
     type = string
-    default = "br0"
+    default = "enp5s0"
 }
 variable "lookup_subnet" {
     type = string
@@ -18,7 +18,7 @@ variable "lookup_subnet" {
 
 variable "ovn_gateway" {
     type = string
-    default = "10.10.32.1"
+    default = "10.10.32.1/24"
 }
 variable "ovn_range_start" {
     type = string
