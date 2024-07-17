@@ -1,4 +1,10 @@
-# Get started
+# Single Node Microcloud deployment (Nested VMs)
+
+## Prerequisities
+
+- Single Ubuntu node with LXD installed
+
+## Get started - init lxd - optional if already initialised
 
 ```
 sudo lxd init --auto
@@ -24,3 +30,4 @@ The terraform will automatically trigger an initialisation, via the non-interact
 
 - Additional networks
 - Microcloud VM bridging
+- Multinode
