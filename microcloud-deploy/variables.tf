@@ -9,7 +9,7 @@ variable "lxd_project" {
 }
 variable "bridge_nic" {
     type = string
-    default = "enp5s0"
+    default = "br0"
 }
 variable "lookup_subnet" {
     type = string
