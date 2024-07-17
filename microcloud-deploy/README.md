@@ -1,6 +1,6 @@
 # Single Node Microcloud deployment (Nested VMs)
 
-## Prerequisities
+## Prerequisites
 
 - Single Ubuntu node with LXD installed
 
