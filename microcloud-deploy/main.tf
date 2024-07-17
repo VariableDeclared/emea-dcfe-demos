@@ -24,6 +24,7 @@ users:
     ssh_authorized_keys:
     - ${var.ssh_pubkey}
     sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /usr/bin/bash
 snap:
   commands:
     1: [snap, refresh, lxd, --channel=5.21/stable, --cohort="+"]
@@ -100,7 +101,7 @@ resource "ssh_resource" "microcloud_init" {
   when         = "create" # Default
   depends_on = [ lxd_instance.microcloud_nodes ]
   file {
-    content     = templatefile("${path.module}/templates/mc-init.tmpl", { instances = [for i in lxd_instance.microcloud_nodes : i.name], lookup_subnet = var.lookup_subnet, bridge_nic = var.bridge_nic, bridge_nic_cidr = var.lookup_subnet, ovn_gateway = var.ovn_gateway, ovn_range_start = var.ovn_range_start, ovn_range_end = var.ovn_range_end })
+    content     = templatefile("${path.module}/templates/mc-init.tmpl", { instances = [for i in lxd_instance.microcloud_nodes : i.name], lookup_subnet = var.lookup_subnet, bridge_nic = var.bridge_nic, bridge_nic_cidr = var.lookup_subnet, ovn_gateway = var.ovn_gateway, ovn_range_start = var.ovn_range_start, ovn_range_end = var.ovn_range_end, microcloud_one_address = "${lxd_instance.microcloud_nodes[0].ipv4_address}/24"})
     destination = "/home/ubuntu/init-mc.yaml"
     permissions = "0600"
   }
