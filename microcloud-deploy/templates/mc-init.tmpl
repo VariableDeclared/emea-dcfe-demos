@@ -1,7 +1,7 @@
 # `lookup_subnet` limits the subnet when looking up systems with mDNS.
 lookup_subnet: ${microcloud_one_address}
 # `lookup_interface` limits the interface when looking up systems with mDNS.
-lookup_interface: eth0
+lookup_interface: ${bridge_nic}
 
 # `systems` lists the systems we expect to find by their host name.
 #   `name` represents the host name

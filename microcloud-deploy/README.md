@@ -13,7 +13,7 @@ sudo lxd init --auto
 ## Init tofu
 
 ```
-sudo snap install --classic tofu
+sudo snap install --classic opentofu
 tofu init
 ```
 
@@ -29,5 +29,5 @@ The terraform will automatically trigger an initialisation, via the non-interact
 ## TODO:
 
 - Additional networks
-- Microcloud VM bridging
+~~- Microcloud VM bridging~~
 - Multinode

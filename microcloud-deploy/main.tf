@@ -41,6 +41,7 @@ network:
   bridges:
       br0:
         dhcp4: true
+        dhcp6: false
         interfaces: [enp5s0]
 EOT
 }
