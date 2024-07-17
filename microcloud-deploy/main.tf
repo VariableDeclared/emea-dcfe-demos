@@ -32,6 +32,17 @@ snap:
     3: [snap, install, microovn, --channel=22.03/stable, --cohort="+"]
     4: [snap, install, microcloud, --channel=latest/stable, --cohort="+"]
 EOT
+  cloud_init_network = <<EOT
+network:
+  version: 2
+  ethernets:
+      enp5s0:
+          dhcp4: false
+  bridges:
+      br0:
+        dhcp4: true
+        interfaces: [enp5s0]
+EOT
 }
 resource "lxd_project" "microcloud" {
   name        = "${var.lxd_project}"
@@ -60,6 +71,7 @@ resource "lxd_instance" "microcloud_nodes" {
   config = {
     "boot.autostart"       = true
     "cloud-init.user-data" = local.cloud_init
+    "cloud-init.network-config" =local.cloud_init_network
   }
 
   limits = {
