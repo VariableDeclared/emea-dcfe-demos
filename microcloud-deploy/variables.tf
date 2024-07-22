@@ -31,6 +31,4 @@ variable "ovn_range_end" {
 variable "ssh_pubkey" {
     type = string
 }
-variable "bridge_nic_cidr" {
-    type = string
-}
+
