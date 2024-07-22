@@ -3,6 +3,14 @@
 ## Prerequisites
 
 - Single Ubuntu node with LXD installed
+- A network of type bridged on the host, e.g. from lxc network list
+```
++----------------+----------+---------+-----------------+---------------------------+-------------+---------+---------+
+|      NAME      |   TYPE   | MANAGED |      IPV4       |           IPV6            | DESCRIPTION | USED BY |  STATE  |
++----------------+----------+---------+-----------------+---------------------------+-------------+---------+---------+
+| br0            | bridge   | NO      |                 |                           |             | 17      |         |
++----------------+----------+---------+-----------------+---------------------------+-------------+---------+---------+
+```
 
 ## Get started - init lxd - optional if already initialised
 
@@ -47,3 +55,4 @@ The terraform will automatically trigger an initialisation, via the non-interact
 - Additional networks
 ~~- Microcloud VM bridging~~
 - Multinode
+- Non-bridged network on the host

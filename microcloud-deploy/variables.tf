@@ -7,10 +7,18 @@ variable "lxd_project" {
     type = string
     default = "microcloud2"
 }
+# TODO Remove this - it can be computed/derived.
 variable "bridge_nic" {
     type = string
     default = "br0"
 }
+
+variable "host_bridge_network" {
+    type = string
+    default = "br0"
+}
+
+
 variable "lookup_subnet" {
     type = string
     default = "10.10.32.1/24"

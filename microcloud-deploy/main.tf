@@ -101,7 +101,7 @@ resource "lxd_instance" "microcloud_nodes" {
     type = "nic"
     properties = {
       nictype = "bridged"
-      parent  = "br0"
+      parent  = "${var.host_bridge_network}"
     }
   }
 }
