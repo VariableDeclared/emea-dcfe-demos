@@ -23,7 +23,7 @@ tofu init
 | --------        | ------- |
 | pro_token       | Can be ignored for now                                |
 | lxd_project     | LXD Project - will be created                         |
-| bridge_nic      | A bridged interface on the host                       |
+| bridge_nic      | The bridge interface created in the VM                |
 | lookup_subnet   | The CIDR of bridge_nic, e.g. 10.10.32.0/24            |
 | ovn_gateway     | The IP to use for the OVN Virtual network router      |
 | ovn_range_start | The start range of OVN to be created                  |
